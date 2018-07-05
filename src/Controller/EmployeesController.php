@@ -46,80 +46,16 @@ class EmployeesController extends AppController
     {
         //$employees = $this->paginate($this->Employees);
         $filter = $this->request->getQuery('filter');
-        $employee = TableRegistry::get('employees')->find('all')->contain(['DeviceRecords']);
-        $first = null;
-        $second = null;
-        $third = null;
-        foreach($employee as $data)
-        {
-            //echo $data->device_records[0]['to_date'];
-            $total_time = 0;
-            foreach($data->device_records as $item)
-            {
-                if($item['to_date']!=null)
-                {
-                    $from_date = $item['from_date'];
-                    $to_date = $item['to_date'];
-                    $diff = $from_date->diff($to_date);
-                    $formatted = $diff->s + $diff->i*60 + $diff->h*3600 + $diff->days*24*3600;
-                    $total_time = $total_time + $formatted;  
-                    $data->total_time = $total_time;
-                }
-            }
-            foreach($data->device_records as $item)
-            {
-                if($item['to_date']==null)
-                {
-                    //echo $item['device_id'];
-                    $data->device_records = $item['device_id'];
-                    break;
-                }
-                else
-                {
-                    $data->device_records = 0;
-                }
-            }
-            if($first == null)
-            {
-                $first = $data;
-                //echo $first->id;
-            }
-            else if($data->total_time > $first->total_time)
-            {
-                $third = $second;
-                $second = $first;
-                $first = $data;
-            }
-            else if($second==null || $data->total_time > $second->total_time)
-            {
-                $third = $second;
-                $second = $data;
-            }
-            else if($third==null || $data->total_time > $third->total_time)
-            {
-                $third = $data;
-            }
-        }
-        //echo $first->id;
-        //echo $second->id;
-        $results = [];
-        array_push($results, $first);
-        array_push($results, $second);
-        array_push($results, $third);
-        // $data->rank[0] = $first;
-        // $data->rank[1] = $second;
-        // $data->rank[2] = $third;
-        //$this->set(compact('employees'));
+        $employee = $this->Employees->displayAll();
         if($filter['show'] == null)
         {
             $this->set('employee', $employee);
         }
         else 
         {
+            $results = $this->Employees->displayStats($employee);
             $this->set('employee', $results);
         }
-        //display for everything else
-        //$this->set('employee', $results);//final stats page
         $this->set('_serialize', true);
     }
 
@@ -133,16 +69,7 @@ class EmployeesController extends AppController
     public function view($id = null)
     {
         $employee = $this->Employees->get($id, ['contain' => ['DeviceRecords']]);
-        $flag=0;
-        $takenDevices = array();
-        foreach($employee->device_records as $item)
-        {
-            if($item['to_date'] == null) {
-                //array_push($takenDevices, $item['device_id']);
-                $devices = TableRegistry::get('Devices');
-                array_push($takenDevices, $devices->get($item['device_id'])['full_id']);
-            }
-        }
+        $takenDevices = $this->Employees->displayById($employee);
         $employee = $this->Employees->get($id);
         $employee->devices = $takenDevices;
         $this->set('employee', $employee);
@@ -162,7 +89,7 @@ class EmployeesController extends AppController
             if ($this->Employees->save($employee)) {
                 $this->Flash->success(__('The employee has been saved.'));
 
-                return $this->redirect(['action' => 'index']);
+                //return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('The employee could not be saved. Please, try again.'));
         }
@@ -187,7 +114,7 @@ class EmployeesController extends AppController
             if ($this->Employees->save($employee)) {
                 $this->Flash->success(__('The employee has been saved.'));
 
-                return $this->redirect(['action' => 'index']);
+                //return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('The employee could not be saved. Please, try again.'));
         }
