@@ -21,28 +21,7 @@ class DevicesController extends AppController
      *
      * @return \Cake\Http\Response|void
      */
-    public function beforeRender(event $event) {
-        $this->setCorsHeaders();
-    }
-
-    public function beforeFilter(event $event) {
-        if ($this->request->is('options')) {
-            $this->response->header('Access-Control-Allow-Origin', '*');
-            $this->setCorsHeaders();
-            return $this->response;
-        }
-    }
-
-    private function setCorsHeaders() {
-        $this->response->cors($this->request)
-            ->allowOrigin(['*'])
-            ->allowMethods(['*'])
-            ->allowHeaders(['x-xsrf-token', 'Origin', 'Content-Type', 'X-Auth-Token'])
-            ->allowCredentials(['true'])
-            ->exposeHeaders(['Link'])
-            ->maxAge(300)
-            ->build();
-    }
+    
     public function index()
     {
         // $devices = $this->paginate($this->Devices);

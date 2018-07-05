@@ -37,6 +37,28 @@ class AppController extends Controller
      *
      * @return void
      */
+    public function beforeRender(event $event) {
+        $this->setCorsHeaders();
+    }
+
+    public function beforeFilter(event $event) {
+        if ($this->request->is('options')) {
+            $this->response->header('Access-Control-Allow-Origin', '*');
+            $this->setCorsHeaders();
+            return $this->response;
+        }
+    }
+
+    private function setCorsHeaders() {
+        $this->response->cors($this->request)
+            ->allowOrigin(['*'])
+            ->allowMethods(['*'])
+            ->allowHeaders(['x-xsrf-token', 'Origin', 'Content-Type', 'X-Auth-Token'])
+            ->allowCredentials(['true'])
+            ->exposeHeaders(['Link'])
+            ->maxAge(300)
+            ->build();
+    }
     public function initialize()
     {
         parent::initialize();
