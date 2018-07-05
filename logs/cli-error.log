@@ -1,0 +1,18 @@
+2018-06-28 10:01:12 Error: [Cake\Database\Exception] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'device_manager.device_record' doesn't exist in C:\xampp\htdocs\DeviceManagerServer\vendor\cakephp\cakephp\src\Database\Schema\Collection.php on line 131
+Stack Trace:
+#0 C:\xampp\htdocs\DeviceManagerServer\vendor\cakephp\cakephp\src\Database\Schema\Collection.php(97): Cake\Database\Schema\Collection->_reflect('Column', 'device_record', Array, Object(Cake\Database\Schema\TableSchema))
+#1 C:\xampp\htdocs\DeviceManagerServer\vendor\cakephp\cakephp\src\Database\Schema\CachedCollection.php(63): Cake\Database\Schema\Collection->describe('device_record', Array)
+#2 C:\xampp\htdocs\DeviceManagerServer\vendor\cakephp\cakephp\src\ORM\Table.php(548): Cake\Database\Schema\CachedCollection->describe('device_record')
+#3 C:\xampp\htdocs\DeviceManagerServer\vendor\cakephp\cakephp\src\ORM\Table.php(673): Cake\ORM\Table->getSchema()
+#4 C:\xampp\htdocs\DeviceManagerServer\vendor\cakephp\bake\src\Shell\Task\ModelTask.php(220): Cake\ORM\Table->getPrimaryKey()
+#5 C:\xampp\htdocs\DeviceManagerServer\vendor\cakephp\bake\src\Shell\Task\ModelTask.php(130): Bake\Shell\Task\ModelTask->getAssociations(Object(Cake\ORM\Table))
+#6 C:\xampp\htdocs\DeviceManagerServer\vendor\cakephp\bake\src\Shell\Task\ModelTask.php(113): Bake\Shell\Task\ModelTask->getTableContext(Object(Cake\ORM\Table), 'device_record', 'DeviceRecord')
+#7 C:\xampp\htdocs\DeviceManagerServer\vendor\cakephp\bake\src\Shell\Task\ModelTask.php(100): Bake\Shell\Task\ModelTask->bake('DeviceRecord')
+#8 C:\xampp\htdocs\DeviceManagerServer\vendor\cakephp\cakephp\src\Console\Shell.php(532): Bake\Shell\Task\ModelTask->main('DeviceRecord')
+#9 C:\xampp\htdocs\DeviceManagerServer\vendor\cakephp\cakephp\src\Console\Shell.php(525): Cake\Console\Shell->runCommand(Array, false, Array)
+#10 C:\xampp\htdocs\DeviceManagerServer\vendor\cakephp\cakephp\src\Console\CommandRunner.php(342): Cake\Console\Shell->runCommand(Array, true)
+#11 C:\xampp\htdocs\DeviceManagerServer\vendor\cakephp\cakephp\src\Console\CommandRunner.php(164): Cake\Console\CommandRunner->runShell(Object(Bake\Shell\BakeShell), Array)
+#12 C:\xampp\htdocs\DeviceManagerServer\bin\cake.php(12): Cake\Console\CommandRunner->run(Array)
+#13 {main}
+
+

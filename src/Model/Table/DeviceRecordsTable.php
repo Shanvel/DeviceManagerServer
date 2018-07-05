@@ -88,13 +88,14 @@ class DeviceRecordsTable extends Table
         return $rules;
     }
 
-    public function update($device_id, $emp_id, $to_date)
+    public function update($id)
     {
-        echo "function";
-        $record=$this->find()->where(['device_id'=>$device_id, 'to_date IS NULL']);
-        $id =  $record->first()['id'];
+        // echo "function";
+        // $record=$this->find()->where(['device_id'=>$device_id, 'to_date IS NULL']);
+        // $id =  $record->first()['id'];
         $records = $this->get($id);
-        $records->to_date = $to_date;
+        echo  DboSource::expression('NOW()');
+        //$records->to_date =  DboSource::expression('NOW()');
         $this->save($records);
     }
 }

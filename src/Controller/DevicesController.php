@@ -21,9 +21,27 @@ class DevicesController extends AppController
      *
      * @return \Cake\Http\Response|void
      */
-    public function beforeFilter(Event $event)
-    {
-        $this->response->header('Access-Control-Allow-Origin', '*');
+    public function beforeRender(event $event) {
+        $this->setCorsHeaders();
+    }
+
+    public function beforeFilter(event $event) {
+        if ($this->request->is('options')) {
+            $this->response->header('Access-Control-Allow-Origin', '*');
+            $this->setCorsHeaders();
+            return $this->response;
+        }
+    }
+
+    private function setCorsHeaders() {
+        $this->response->cors($this->request)
+            ->allowOrigin(['*'])
+            ->allowMethods(['*'])
+            ->allowHeaders(['x-xsrf-token', 'Origin', 'Content-Type', 'X-Auth-Token'])
+            ->allowCredentials(['true'])
+            ->exposeHeaders(['Link'])
+            ->maxAge(300)
+            ->build();
     }
     public function index()
     {
@@ -31,8 +49,11 @@ class DevicesController extends AppController
 
         // $this->set(compact('devices'));
         // $this->set('_serialize', true);
+        $filter = $this->request->getQuery('filter');
         $device = TableRegistry::get('devices')->find('all')->contain(['DeviceRecords']);
-        
+        $first = null;
+        $second = null;
+        $third = null;
         foreach($device as $data)
         {
             //echo $data->device_records[0]['to_date'];
@@ -41,11 +62,12 @@ class DevicesController extends AppController
             {
                 if($item['to_date']==null)
                 {
-                    $data->device_records = 1;
+                    $employees = TableRegistry::get('Employees');
+                    $data->device_records = "Taken By ".$employees->get($item['emp_id'])['name'];
                 }
                 else
                 {
-                    $data->device_records = 0;
+                    $data->device_records = "Available";
                     $from_date = $item['from_date'];
                     $to_date = $item['to_date'];
                     $diff = $from_date->diff($to_date);
@@ -55,6 +77,26 @@ class DevicesController extends AppController
                 }
                 $total_time = $total_time + $formatted;
                 $data->total_time = $total_time;
+            }
+            if($first == null)
+            {
+                $first = $data;
+                //echo $first->id;
+            }
+            else if($data->total_time > $first->total_time)
+            {
+                $third = $second;
+                $second = $first;
+                $first = $data;
+            }
+            else if($second==null || $data->total_time > $second->total_time)
+            {
+                $third = $second;
+                $second = $data;
+            }
+            else if($third==null || $data->total_time > $third->total_time)
+            {
+                $third = $data;
             }
 
             // if($data['type'] == "Laptop")
@@ -71,8 +113,21 @@ class DevicesController extends AppController
             // }
             
         }
+        echo $second->id;
+        $results = [];
+        array_push($results, $first);
+        array_push($results, $second);
+        array_push($results, $third);
+        if($filter['show'] == null)
+        {
+            $this->set('device', $device);
+        }
+        else 
+        {
+            $this->set('device', $results);
+        }
+        //$this->set('device', $results);//final stats page
         //echo "88888888888888888888".$device->first()->device_records[0]['to_date']."7777777777777777";
-        $this->set('device', $device);
         $this->set('_serialize', true);
     }
 
@@ -88,6 +143,23 @@ class DevicesController extends AppController
         $device=$this->Devices->get($id, [
             'contain' => ['DeviceRecords']
         ]);
+        foreach($device->device_records as $data)
+        {
+            if($data['to_date'] == null)
+            {
+                $device->status = "Not Available";
+                break;
+            }
+            else
+            {
+                $device->status="Available";
+            }
+        }
+        foreach($device->device_records as $data)
+        {
+            $employees = TableRegistry::get('Employees');
+            $data['emp_id'] = $employees->get($data['emp_id'])['name'];
+        }
         // foreach($device->device_records as $data)
         // {
         //     if($data['to_date']==null)

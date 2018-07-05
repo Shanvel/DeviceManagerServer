@@ -20,9 +20,27 @@ class DeviceRecordsController extends AppController
      *
      * @return \Cake\Http\Response|void
      */
-    public function beforeFilter(Event $event)
-    {
-        $this->response->header('Access-Control-Allow-Origin', '*');
+    public function beforeRender(event $event) {
+        $this->setCorsHeaders();
+    }
+
+    public function beforeFilter(event $event) {
+        if ($this->request->is('options')) {
+            $this->response->header('Access-Control-Allow-Origin', '*');
+            $this->setCorsHeaders();
+            return $this->response;
+        }
+    }
+
+    private function setCorsHeaders() {
+        $this->response->cors($this->request)
+            ->allowOrigin(['*'])
+            ->allowMethods(['*'])
+            ->allowHeaders(['*'])
+            ->allowCredentials(['true'])
+            ->exposeHeaders(['Link'])
+            ->maxAge(300)
+            ->build();
     }
     public function index()
     {
@@ -60,21 +78,23 @@ class DeviceRecordsController extends AppController
     public function add()
     {
         $deviceRecord = $this->DeviceRecords->newEntity();
+        echo "inside function";
         if ($this->request->is('post')) {
-            $deviceRecord = $this->DeviceRecords->patchEntity($deviceRecord, $this->request->getData(), ['validate'=>false]);
+            $deviceRecord = $this->DeviceRecords->patchEntity($deviceRecord, $this->request->getData('deviceRecord'), ['validate'=>false]);
             if ($this->DeviceRecords->save($deviceRecord)) {
                 $this->Flash->success(__('The device record has been saved.'));
 
-                return $this->redirect(['action' => 'index']);
+                //return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('The device record could not be saved. Please, try again.'));
         }
-        else if($this->request->is(['patch', 'put']))
-        {
-            $records = $this->DeviceRecords->update($this->request->data['device_id'], $this->request->data['emp_id'], $this->request->data['to_date']);
-            $this->set('records', $records);
-            $this->set('_serialize', true);
-        }
+        // if($this->request->is(['patch', 'put', 'post']))
+        // {
+        //     echo "edit";
+        //     $records = $this->DeviceRecords->update($this->request->data['device_id'], $this->request->data['emp_id'], $this->request->data['to_date']);
+        //     $this->set('records', $records);
+        //     $this->set('_serialize', true);
+        // }
         $devices = $this->DeviceRecords->Devices->find('list', ['limit' => 200]);
         $employees = $this->DeviceRecords->Employees->find('list', ['limit' => 200]);
         $this->set(compact('deviceRecord', 'devices', 'employees'));
@@ -91,27 +111,27 @@ class DeviceRecordsController extends AppController
     public function edit($id = null)
     {
         echo "add";
-        if($this->request->is(['patch', 'put', 'post']))
-        {
-            $records = $this->DeviceRecords->update($this->request->data['device_id'], $this->request->data['emp_id'], $this->request->data['to_date']);
-            $this->set('records', $records);
-            $this->set('_serialize', true);
-        }
-        // $deviceRecord = $this->DeviceRecords->get($id, [
-        //     'contain' => []
-        // ]);
-        // if ($this->request->is(['patch', 'post', 'put'])) {
-        //     $deviceRecord = $this->DeviceRecords->patchEntity($deviceRecord, $this->request->getData());
-        //     if ($this->DeviceRecords->save($deviceRecord)) {
-        //         $this->Flash->success(__('The device record has been saved.'));
-
-        //         return $this->redirect(['action' => 'index']);
-        //     }
-        //     $this->Flash->error(__('The device record could not be saved. Please, try again.'));
+        // if($this->request->is(['patch', 'put']))
+        // {
+        //     $records = $this->DeviceRecords->update($this->request->data['id']);
+        //     $this->set('records', $records);
+        //     $this->set('_serialize', true);
         // }
-        // $devices = $this->DeviceRecords->Devices->find('list', ['limit' => 200]);
-        // $employees = $this->DeviceRecords->Employees->find('list', ['limit' => 200]);
-        // $this->set(compact('deviceRecord', 'devices', 'employees'));
+        $deviceRecord = $this->DeviceRecords->get($id, [
+            'contain' => []
+        ]);
+        if ($this->request->is(['patch', 'post', 'put'])) {
+            $deviceRecord = $this->DeviceRecords->patchEntity($deviceRecord, $this->request->getData('deviceRecord'));
+            if ($this->DeviceRecords->save($deviceRecord)) {
+                $this->Flash->success(__('The device record has been saved.'));
+
+                return $this->redirect(['action' => 'index']);
+            }
+            $this->Flash->error(__('The device record could not be saved. Please, try again.'));
+        }
+        $devices = $this->DeviceRecords->Devices->find('list', ['limit' => 200]);
+        $employees = $this->DeviceRecords->Employees->find('list', ['limit' => 200]);
+        $this->set(compact('deviceRecord', 'devices', 'employees'));
     }
 
     /**

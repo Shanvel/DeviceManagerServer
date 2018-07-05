@@ -20,14 +20,36 @@ class EmployeesController extends AppController
      *
      * @return \Cake\Http\Response|void
      */
-    public function beforeFilter(Event $event)
-    {
-        $this->response->header('Access-Control-Allow-Origin', '*');
+    public function beforeRender(event $event) {
+        $this->setCorsHeaders();
+    }
+
+    public function beforeFilter(event $event) {
+        if ($this->request->is('options')) {
+            $this->response->header('Access-Control-Allow-Origin', '*');
+            $this->setCorsHeaders();
+            return $this->response;
+        }
+    }
+
+    private function setCorsHeaders() {
+        $this->response->cors($this->request)
+            ->allowOrigin(['*'])
+            ->allowMethods(['*'])
+            ->allowHeaders(['x-xsrf-token', 'Origin', 'Content-Type', 'X-Auth-Token'])
+            ->allowCredentials(['true'])
+            ->exposeHeaders(['Link'])
+            ->maxAge(300)
+            ->build();
     }
     public function index()
     {
         //$employees = $this->paginate($this->Employees);
+        $filter = $this->request->getQuery('filter');
         $employee = TableRegistry::get('employees')->find('all')->contain(['DeviceRecords']);
+        $first = null;
+        $second = null;
+        $third = null;
         foreach($employee as $data)
         {
             //echo $data->device_records[0]['to_date'];
@@ -57,9 +79,47 @@ class EmployeesController extends AppController
                     $data->device_records = 0;
                 }
             }
+            if($first == null)
+            {
+                $first = $data;
+                //echo $first->id;
+            }
+            else if($data->total_time > $first->total_time)
+            {
+                $third = $second;
+                $second = $first;
+                $first = $data;
+            }
+            else if($second==null || $data->total_time > $second->total_time)
+            {
+                $third = $second;
+                $second = $data;
+            }
+            else if($third==null || $data->total_time > $third->total_time)
+            {
+                $third = $data;
+            }
         }
+        //echo $first->id;
+        //echo $second->id;
+        $results = [];
+        array_push($results, $first);
+        array_push($results, $second);
+        array_push($results, $third);
+        // $data->rank[0] = $first;
+        // $data->rank[1] = $second;
+        // $data->rank[2] = $third;
         //$this->set(compact('employees'));
-        $this->set('employee', $employee);
+        if($filter['show'] == null)
+        {
+            $this->set('employee', $employee);
+        }
+        else 
+        {
+            $this->set('employee', $results);
+        }
+        //display for everything else
+        //$this->set('employee', $results);//final stats page
         $this->set('_serialize', true);
     }
 

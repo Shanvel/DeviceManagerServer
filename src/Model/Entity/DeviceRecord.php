@@ -28,9 +28,8 @@ class DeviceRecord extends Entity
      * @var array
      */
 
-    
+
     protected $_accessible = [
-        'id' => true,
         'device_id' => true,
         'from_date' => true,
         'to_date' => true,
