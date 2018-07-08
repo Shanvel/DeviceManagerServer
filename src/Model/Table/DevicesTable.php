@@ -81,112 +81,112 @@ class DevicesTable extends Table
 
         return $validator;
     }
-    public function displayById($device)
+    /**
+     * getById method
+     *
+     * @param CakePHP object device
+     * @return CakePHP object device
+     */
+    public function getById($device)
     {
-        foreach($device->device_records as $data)
-        {
-            if($data['to_date'] == null)
-            {
+        foreach($device->device_records as $data){
+            if($data['to_date'] == null){
                 $device->status = "Not Available";
                 break;
             }
-            else
-            {
+            else{
                 $device->status="Available";
             }
         }
-        foreach($device->device_records as $data)
-        {
+        foreach($device->device_records as $data){
             $employees = TableRegistry::get('Employees');
             $data['emp_id'] = $employees->get($data['emp_id'])['name'];
         }
-        // foreach($device->device_records as $data)
-        // {
-        //     if($data['to_date']==null)
-        //     {
-        //         echo "eureka".$data['id'];
-        //     }
-        // }
-        //echo "8888888888888888888888888888888888".$device['device_records'][0]['id']."7777777777777777777777777777777777777777";
         return $device;
     }
-    public function displayStats($device)
+
+    /**
+     * getStats method
+     *
+     * @param CakePHP object device
+     * @return CakePHP object device
+     */
+    public function getStats($device)
     {
         $first = null;
         $second = null;
         $third = null;
-        foreach($device as $data)
-        {
-            if($first == null)
-            {
+        foreach($device as $data){
+            if($first == null){
                 $first = $data;
-                //echo $first->id;
             }
-            else if($data->total_time > $first->total_time)
-            {
+            else if($data->total_time > $first->total_time){
                 $third = $second;
                 $second = $first;
                 $first = $data;
             }
-            else if($second==null || $data->total_time > $second->total_time)
-            {
+            else if($second==null || $data->total_time > $second->total_time){
                 $third = $second;
                 $second = $data;
             }
-            else if($third==null || $data->total_time > $third->total_time)
-            {
+            else if($third==null || $data->total_time > $third->total_time){
                 $third = $data;
             }
         }
-        // echo $second->id;
         $results = [];
         array_push($results, $first);
         array_push($results, $second);
         array_push($results, $third);
         return $results;
     }
-    public function displayAll()
+
+    /**
+     * getAvailable method
+     *
+     * @param CakePHP object device
+     * @return CakePHP object device
+     */
+    public function getAvailable($device)
+    {
+        $output = array();
+        foreach($device as $data){
+            if($data->device_records == "Available"){
+                $temp = array();
+                array_push($temp, $data->id);
+                array_push($temp, $data->full_id);
+                array_push($output,$temp);
+            }
+        }
+        return $output;
+    }
+
+    /**
+     * getAll method
+     *
+     * @param CakePHP object device
+     * @return CakePHP object device
+     */
+    public function getAll()
     {
         $device = TableRegistry::get('devices')->find('all')->contain(['DeviceRecords']);
         
-        foreach($device as $data)
-        {
-            //echo $data->device_records[0]['to_date'];
+        foreach($device as $data){
             $total_time = 0;
-            foreach($data->device_records as $item)
-            {
-                if($item['to_date']==null)
-                {
+            foreach($data->device_records as $item){
+                if($item['to_date'] ==null){
                     $employees = TableRegistry::get('Employees');
                     $data->device_records = "Taken By ".$employees->get($item['emp_id'])['name'];
                 }
-                else
-                {
+                else{
                     $data->device_records = "Available";
                     $from_date = $item['from_date'];
                     $to_date = $item['to_date'];
                     $diff = $from_date->diff($to_date);
                     $formatted = $diff->s + $diff->i*60 + $diff->h*3600 + $diff->days*24*3600;
-                    //$formatted = sprintf('%02d:%02d:%02d', ($diff->days * 24) + $diff->h, $diff->i, $diff->s);
-                    //echo $formatted;
                 }
                 $total_time = $total_time + $formatted;
                 $data->total_time = $total_time;
             }
-
-            if($data['type'] == "Laptop")
-            {
-                $data['id'] = "ZRX-DEV-LAP-".$data['id'];
-            }
-            else if($data['type'] == "Mobile")
-            {
-                $data['id'] = "ZRX-DEV-MOB-".$data['id'];
-            }
-            else
-            {
-                $data['id'] = "ZRX-DEV-TAB-".$data['id'];
-            }
-            
         }
         return $device;
     }

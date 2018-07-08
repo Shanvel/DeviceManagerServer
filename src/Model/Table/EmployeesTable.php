@@ -61,31 +61,32 @@ class EmployeesTable extends Table
 
         return $validator;
     }
-    public function displayStats($employee)
+
+    /**
+     * getStats method
+     *
+     * @param CakePHP object employee
+     * @return CakePHP object employee
+     */
+    public function getStats($employee)
     {
         $first = null;
         $second = null;
         $third = null;
-        foreach($employee as $data)
-        {
-            if($first == null)
-            {
+        foreach($employee as $data){
+            if($first == null){
                 $first = $data;
-                //echo $first->id;
             }
-            else if($data->total_time > $first->total_time)
-            {
+            else if($data->total_time > $first->total_time){
                 $third = $second;
                 $second = $first;
                 $first = $data;
             }
-            else if($second==null || $data->total_time > $second->total_time)
-            {
+            else if($second==null || $data->total_time > $second->total_time){
                 $third = $second;
                 $second = $data;
             }
-            else if($third==null || $data->total_time > $third->total_time)
-            {
+            else if($third==null || $data->total_time > $third->total_time){
                 $third = $data;
             }
         }
@@ -95,18 +96,21 @@ class EmployeesTable extends Table
         array_push($results, $third);
         return $results;
     }
-    public function displayAll()
+
+    /**
+     * getAll method
+     *
+     * @param CakePHP object employee
+     * @return CakePHP object employee
+     */
+    public function getAll()
     {
         $employee = TableRegistry::get('employees')->find('all')->contain(['DeviceRecords']);
         
-        foreach($employee as $data)
-        {
-            //echo $data->device_records[0]['to_date'];
+        foreach($employee as $data){
             $total_time = 0;
-            foreach($data->device_records as $item)
-            {
-                if($item['to_date']!=null)
-                {
+            foreach($data->device_records as $item){
+                if($item['to_date']!=null){
                     $from_date = $item['from_date'];
                     $to_date = $item['to_date'];
                     $diff = $from_date->diff($to_date);
@@ -114,40 +118,29 @@ class EmployeesTable extends Table
                     $total_time = $total_time + $formatted;  
                     $data->total_time = $total_time;
                 }
-            }
-            foreach($data->device_records as $item)
-            {
-                if($item['to_date']==null)
-                {
-                    //echo $item['device_id'];
-                    $data->device_records = $item['device_id'];
-                    break;
-                }
-                else
-                {
-                    $data->device_records = 0;
-                }
-            }
-            
+            } 
+            unset($data->device_records);
         }
-        //echo $first->id;
-        //echo $second->id;
-        // $data->rank[0] = $first;
-        // $data->rank[1] = $second;
-        // $data->rank[2] = $third;
-        return $employee;
-        //$this->set(compact('employees'));
-        
+        return $employee; 
     }
-    public function displayById($employee)
+
+    /**
+     * getById method
+     *
+     * @param CakePHP object employee
+     * @return CakePHP object employee
+     */
+    public function getById($employee)
     {
         $takenDevices = array();
-        foreach($employee->device_records as $item)
-        {
+        foreach($employee->device_records as $item){
             if($item['to_date'] == null) {
-                //array_push($takenDevices, $item['device_id']);
+                $takenDevice = array();
                 $devices = TableRegistry::get('Devices');
-                array_push($takenDevices, $devices->get($item['device_id'])['full_id']);
+                array_push($takenDevice, $devices->get($item['device_id'])['id']);
+                array_push($takenDevice, $devices->get($item['device_id'])['full_id']);
+                array_push($takenDevice, $item['id']);
+                array_push($takenDevices, $takenDevice);
             }
         }
         return $takenDevices;

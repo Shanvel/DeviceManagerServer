@@ -26,15 +26,21 @@ class DevicesController extends AppController
     {
         // $devices = $this->paginate($this->Devices);
         $filter = $this->request->getQuery('filter');
-        $device = $this->Devices->displayAll();
-        if($filter['show'] == null)
+
+        $device = $this->Devices->getAll();
+        if($filter['show'] ?? null == null)
         {
             $this->set('device', $device);
         }
         else 
         {
-            $results = $this->Devices->displayStats($device);
+            $results = $this->Devices->getStats($device);
             $this->set('device', $results);
+        }
+        if($filter['available']==1)
+        {
+            $output = $this->Devices->getAvailable($device);
+            $this->set('device', $output);
         }
         $this->set('_serialize', true);
         
@@ -52,7 +58,7 @@ class DevicesController extends AppController
         $device = $this->Devices->get($id, [
             'contain' => ['DeviceRecords']
         ]);
-        $device = $this->Devices->displayById($device);
+        $device = $this->Devices->getById($device);
         $this->set('device', $device);
         $this->set('_serialize', true);
     }
@@ -69,8 +75,6 @@ class DevicesController extends AppController
             $device = $this->Devices->patchEntity($device, $this->request->getData());
             if ($this->Devices->save($device)) {
                 $this->Flash->success(__('The device has been saved.'));
-
-                //return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('The device could not be saved. Please, try again.'));
         }
@@ -94,8 +98,6 @@ class DevicesController extends AppController
             $device = $this->Devices->patchEntity($device, $this->request->getData());
             if ($this->Devices->save($device)) {
                 $this->Flash->success(__('The device has been saved.'));
-
-                //return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('The device could not be saved. Please, try again.'));
         }

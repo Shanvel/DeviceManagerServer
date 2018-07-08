@@ -67,13 +67,6 @@ class DeviceRecordsController extends AppController
             }
             $this->Flash->error(__('The device record could not be saved. Please, try again.'));
         }
-        // if($this->request->is(['patch', 'put', 'post']))
-        // {
-        //     echo "edit";
-        //     $records = $this->DeviceRecords->update($this->request->data['device_id'], $this->request->data['emp_id'], $this->request->data['to_date']);
-        //     $this->set('records', $records);
-        //     $this->set('_serialize', true);
-        // }
         $devices = $this->DeviceRecords->Devices->find('list', ['limit' => 200]);
         $employees = $this->DeviceRecords->Employees->find('list', ['limit' => 200]);
         $this->set(compact('deviceRecord', 'devices', 'employees'));
@@ -89,13 +82,6 @@ class DeviceRecordsController extends AppController
      */
     public function edit($id = null)
     {
-        echo "add";
-        // if($this->request->is(['patch', 'put']))
-        // {
-        //     $records = $this->DeviceRecords->update($this->request->data['id']);
-        //     $this->set('records', $records);
-        //     $this->set('_serialize', true);
-        // }
         $deviceRecord = $this->DeviceRecords->get($id, [
             'contain' => []
         ]);
@@ -104,7 +90,7 @@ class DeviceRecordsController extends AppController
             if ($this->DeviceRecords->save($deviceRecord)) {
                 $this->Flash->success(__('The device record has been saved.'));
 
-                return $this->redirect(['action' => 'index']);
+                //return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('The device record could not be saved. Please, try again.'));
         }

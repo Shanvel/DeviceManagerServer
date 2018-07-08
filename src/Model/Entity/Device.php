@@ -27,27 +27,6 @@ class Device extends Entity
      * @var array
      */
 
-    protected $_virtual = ['full_id'];
-
-
-    protected function _getFullId(){
-        //echo $this->_properties['type'];
-        echo $this->DeviceRecord['to_date'];
-        if($this->_properties['type'] == "Laptop")
-        {
-            return "ZRX-DEV-LAP-".$this->_properties['id'];
-        }
-        else if($this->_properties['type'] == "Mobile")
-        {
-            return "ZRX-DEV-MOB-".$this->_properties['id'];
-        }
-        else
-        {
-            return "ZRX-DEV-TAB-".$this->_properties['id'];
-        }
-    }
-
-
     protected $_accessible = [
         'id' => true,
         'name' => true,
@@ -56,4 +35,16 @@ class Device extends Entity
         'version' => true,
         'device_records' => true
     ];
+
+    protected $_virtual = ['full_id'];
+    
+    
+    protected function _getFullId()
+    {
+        switch($this->type){
+            case "Laptop": return "ZRX-DEV-LAP-".$this->id; break;
+            case "Mobile": return "ZRX-MOB-LAP-".$this->id; break;
+            case "Tablet": return "ZRX-DEV-TAB-".$this->id;
+        }
+    }
 }

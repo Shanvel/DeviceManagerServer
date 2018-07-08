@@ -25,14 +25,13 @@ class EmployeesController extends AppController
     {
         //$employees = $this->paginate($this->Employees);
         $filter = $this->request->getQuery('filter');
-        $employee = $this->Employees->displayAll();
-        if($filter['show'] == null)
-        {
+        $employee = $this->Employees->getAll();
+
+        if($filter['show'] == null){
             $this->set('employee', $employee);
         }
-        else 
-        {
-            $results = $this->Employees->displayStats($employee);
+        else {
+            $results = $this->Employees->getStats($employee);
             $this->set('employee', $results);
         }
         $this->set('_serialize', true);
@@ -47,8 +46,8 @@ class EmployeesController extends AppController
      */
     public function view($id = null)
     {
-        $employee = $this->Employees->get($id, ['contain' => ['DeviceRecords']]);
-        $takenDevices = $this->Employees->displayById($employee);
+        $employee = $this->Employees->find('all')->contain(['DeviceRecords'])->select(['id'])->where(['id' => $id])->first();
+        $takenDevices = $this->Employees->getById($employee);
         $employee = $this->Employees->get($id);
         $employee->devices = $takenDevices;
         $this->set('employee', $employee);
