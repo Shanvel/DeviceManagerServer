@@ -5,6 +5,7 @@ use App\Controller\AppController;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 
+use Cake\Datasource\ConnectionManager;
 
 /**
  * Devices Controller
@@ -26,22 +27,8 @@ class DevicesController extends AppController
     {
         // $devices = $this->paginate($this->Devices);
         $filter = $this->request->getQuery('filter');
-
-        $device = $this->Devices->getAll();
-        if($filter['show'] ?? null == null)
-        {
-            $this->set('device', $device);
-        }
-        else 
-        {
-            $results = $this->Devices->getStats($device);
-            $this->set('device', $results);
-        }
-        if($filter['available']==1)
-        {
-            $output = $this->Devices->getAvailable($device);
-            $this->set('device', $output);
-        }
+        $device = $this->Devices->getDevices($filter['show'] ?? null, $filter['available'] ?? null);
+        $this->set('device', $device);
         $this->set('_serialize', true);
         
     }

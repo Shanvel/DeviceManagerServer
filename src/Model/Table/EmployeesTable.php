@@ -6,6 +6,7 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Datasource\ConnectionManager;
 
 /**
  * Employees Model
@@ -68,32 +69,11 @@ class EmployeesTable extends Table
      * @param CakePHP object employee
      * @return CakePHP object employee
      */
-    public function getStats($employee)
+    public function getStats()
     {
-        $first = null;
-        $second = null;
-        $third = null;
-        foreach($employee as $data){
-            if($first == null){
-                $first = $data;
-            }
-            else if($data->total_time > $first->total_time){
-                $third = $second;
-                $second = $first;
-                $first = $data;
-            }
-            else if($second==null || $data->total_time > $second->total_time){
-                $third = $second;
-                $second = $data;
-            }
-            else if($third==null || $data->total_time > $third->total_time){
-                $third = $data;
-            }
-        }
-        $results = [];
-        array_push($results, $first);
-        array_push($results, $second);
-        array_push($results, $third);
+
+        $connection = ConnectionManager::get('default');
+        $results = $connection->execute('SELECT e.id, e.name, sum(timestampdiff(second, d.from_date, d.to_date)) as total_time FROM employees e inner join device_records d on e.id = d.emp_id where d.to_date IS NOT null GROUP BY e.id order BY total_time DESC LIMIT 3')->fetchAll('assoc');
         return $results;
     }
 
@@ -105,44 +85,20 @@ class EmployeesTable extends Table
      */
     public function getAll()
     {
-        $employee = TableRegistry::get('employees')->find('all')->contain(['DeviceRecords']);
-        
-        foreach($employee as $data){
-            $total_time = 0;
-            foreach($data->device_records as $item){
-                if($item['to_date']!=null){
-                    $from_date = $item['from_date'];
-                    $to_date = $item['to_date'];
-                    $diff = $from_date->diff($to_date);
-                    $formatted = $diff->s + $diff->i*60 + $diff->h*3600 + $diff->days*24*3600;
-                    $total_time = $total_time + $formatted;  
-                    $data->total_time = $total_time;
-                }
-            } 
-            unset($data->device_records);
-        }
+        $employee = TableRegistry::get('employees')->find('all'); 
         return $employee; 
     }
 
     /**
      * getById method
      *
-     * @param CakePHP object employee
+     * @param id
      * @return CakePHP object employee
      */
-    public function getById($employee)
+    public function getById($id)
     {
-        $takenDevices = array();
-        foreach($employee->device_records as $item){
-            if($item['to_date'] == null) {
-                $takenDevice = array();
-                $devices = TableRegistry::get('Devices');
-                array_push($takenDevice, $devices->get($item['device_id'])['id']);
-                array_push($takenDevice, $devices->get($item['device_id'])['full_id']);
-                array_push($takenDevice, $item['id']);
-                array_push($takenDevices, $takenDevice);
-            }
-        }
-        return $takenDevices;
+        $connection = ConnectionManager::get('default');
+        $employee = $connection->execute('SELECT e.id as employee_id, dr.id as record_id, d.id as device_id, d.name as device_name from employees e INNER JOIN device_records dr ON e.id = dr.emp_id INNER JOIN devices d on d.id = dr.device_id where dr.to_date IS Null AND e.id=:id',['id' => $id])->fetchAll('assoc');
+        return $employee;
     }
 }

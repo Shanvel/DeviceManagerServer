@@ -4,7 +4,7 @@ namespace App\Controller;
 use App\Controller\AppController;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-
+use Cake\Datasource\ConnectionManager;
 /**
  * Employees Controller
  *
@@ -25,13 +25,13 @@ class EmployeesController extends AppController
     {
         //$employees = $this->paginate($this->Employees);
         $filter = $this->request->getQuery('filter');
-        $employee = $this->Employees->getAll();
 
-        if($filter['show'] == null){
+        if($filter['show'] ?? null == null){
+            $employee = $this->Employees->getAll();
             $this->set('employee', $employee);
         }
         else {
-            $results = $this->Employees->getStats($employee);
+            $results = $this->Employees->getStats();
             $this->set('employee', $results);
         }
         $this->set('_serialize', true);
@@ -46,10 +46,7 @@ class EmployeesController extends AppController
      */
     public function view($id = null)
     {
-        $employee = $this->Employees->find('all')->contain(['DeviceRecords'])->select(['id'])->where(['id' => $id])->first();
-        $takenDevices = $this->Employees->getById($employee);
-        $employee = $this->Employees->get($id);
-        $employee->devices = $takenDevices;
+        $employee = $this->Employees->getById($id);
         $this->set('employee', $employee);
         $this->set('_serialize', true);
     }

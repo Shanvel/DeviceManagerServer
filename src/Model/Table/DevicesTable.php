@@ -6,6 +6,7 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Datasource\ConnectionManager;
 
 /**
  * Devices Model
@@ -111,32 +112,10 @@ class DevicesTable extends Table
      * @param CakePHP object device
      * @return CakePHP object device
      */
-    public function getStats($device)
+    public function getStats()
     {
-        $first = null;
-        $second = null;
-        $third = null;
-        foreach($device as $data){
-            if($first == null){
-                $first = $data;
-            }
-            else if($data->total_time > $first->total_time){
-                $third = $second;
-                $second = $first;
-                $first = $data;
-            }
-            else if($second==null || $data->total_time > $second->total_time){
-                $third = $second;
-                $second = $data;
-            }
-            else if($third==null || $data->total_time > $third->total_time){
-                $third = $data;
-            }
-        }
-        $results = [];
-        array_push($results, $first);
-        array_push($results, $second);
-        array_push($results, $third);
+        $connection = ConnectionManager::get('default');
+        $results = $connection->execute('SELECT d.id, d.name, sum(timestampdiff(second, dr.from_date, dr.to_date)) as total_time FROM devices d inner join device_records dr on d.id = dr.device_id where dr.to_date IS NOT null GROUP BY d.id order BY total_time DESC LIMIT 3')->fetchAll('assoc');
         return $results;
     }
 
@@ -146,24 +125,17 @@ class DevicesTable extends Table
      * @param CakePHP object device
      * @return CakePHP object device
      */
-    public function getAvailable($device)
+    public function getAvailable()
     {
-        $output = array();
-        foreach($device as $data){
-            if($data->device_records == "Available"){
-                $temp = array();
-                array_push($temp, $data->id);
-                array_push($temp, $data->full_id);
-                array_push($output,$temp);
-            }
-        }
+        $connection = ConnectionManager::get('default');
+        $output = $connection->execute('SELECT d.id, d.name from devices d inner join device_records dr on d.id = dr.device_id where d.id not in (SELECT dr.device_id FROM device_records dr INNER join devices d on d.id = dr.device_id where to_date is null)') ->fetchAll('assoc');
         return $output;
     }
 
     /**
      * getAll method
      *
-     * @param CakePHP object device
+     * @param void
      * @return CakePHP object device
      */
     public function getAll()
@@ -171,7 +143,6 @@ class DevicesTable extends Table
         $device = TableRegistry::get('devices')->find('all')->contain(['DeviceRecords']);
         
         foreach($device as $data){
-            $total_time = 0;
             foreach($data->device_records as $item){
                 if($item['to_date'] ==null){
                     $employees = TableRegistry::get('Employees');
@@ -179,16 +150,26 @@ class DevicesTable extends Table
                 }
                 else{
                     $data->device_records = "Available";
-                    $from_date = $item['from_date'];
-                    $to_date = $item['to_date'];
-                    $diff = $from_date->diff($to_date);
-                    $formatted = $diff->s + $diff->i*60 + $diff->h*3600 + $diff->days*24*3600;
-                }
-                $total_time = $total_time + $formatted;
-                $data->total_time = $total_time;
             }
         }
         return $device;
+    }
+
+    public function getDevices($show, $available)
+    {
+        $device = $this->getAll();
+        if($show == null && $available == null)
+        {
+            return $device;
+        }
+        else if($show!=null)
+        {
+            return $this->getStats($device);
+        }
+        else if($available!=null)
+        {
+            return $this->getAvailable();
+        }
     }
 
 }
